@@ -13,21 +13,30 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const server = express().use(cors());
-const queryServerIP = '192.168.11.90';
+const queryServerIP = 'localhost';
 
-server.get('/get/:cns', async (req, res) => {
+server.get('/get/:id', async (req, res) => {
 
   // send request to CDS-SERVER
   // 700404961466647 - FELLYP | TEST
 
-  const { cns } = req.params;
-  const { data: response } = await axios.get(`http://${ queryServerIP }:5433/get/${cns}/${computer.toUpperCase()}`);
+  const { id } = req.params;
+  console.log(`\n\n[CONSULTAR] ${id} ...`)
 
-  console.log('Resposta: ', response);
-  res.send(response);
+  try {
+    const { data: response } = await axios.get(`http://${ queryServerIP }:5433/get/${id}/${computer.toUpperCase()}`);
+
+    console.log('[RESULTADO]: ', response);
+    return res.send(response);
+  }
+  catch(error) {
+    console.log('consulta: ', error.message);
+    return res.send('Erro desconhecido');
+  }
+
 });
 
 server.listen(5432, () => {
   console.log('Servidor rodando!');
-  console.log('Aproveite a digitação de fichas kkkk ...\n');
+  console.log('Aproveite a digitação de fichas kkkk ...');
 });

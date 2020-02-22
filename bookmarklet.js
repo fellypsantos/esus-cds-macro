@@ -10,13 +10,12 @@ javascript:(() => {
 
     if (response.error) {
       switch(response.error) {
-        case 'disconnected':
-          alert("Desconectado do SISREG.");
-          break;
-
-        case 'cookie_server_offline':
-          alert("Servidor do cookie está offline.");
-          break;
+        case 'ETIMEDOUT':
+        case 'DISCONNECTED':
+        case 'CNS':
+        case 'COOKIE_EXPIRED':
+        case 'UNDEFINED':
+          alert(`[${response.error}] ${response.description}`);
       }
 
       return false;

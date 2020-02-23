@@ -13,7 +13,9 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const server = express().use(cors());
-const queryServerIP = 'localhost';
+const arguments = process.argv;
+let paramServerIP = arguments.indexOf('--server');
+let serverIP = (paramServerIP > 0) ? arguments[paramServerIP + 1] : 'localhost'
 
 server.get('/get/:id', async (req, res) => {
 
@@ -24,7 +26,7 @@ server.get('/get/:id', async (req, res) => {
   console.log(`\n\n[CONSULTAR] ${id} ...`)
 
   try {
-    const { data: response } = await axios.get(`http://${ queryServerIP }:5433/get/${id}/${computer.toUpperCase()}`);
+    const { data: response } = await axios.get(`http://${ serverIP }:5433/get/${id}/${computer.toUpperCase()}`);
 
     console.log('[RESULTADO]: ', response);
     return res.send(response);
@@ -37,6 +39,5 @@ server.get('/get/:id', async (req, res) => {
 });
 
 server.listen(5432, () => {
-  console.log('Servidor rodando!');
-  console.log('Aproveite a digitação de fichas kkkk ...');
+  console.log(`[PRONTO] Servidor rodando!`);
 });

@@ -1,7 +1,6 @@
 javascript:(() => {
 
   const baseURL = 'http://localhost:5432';
-  const writeDelay = 800;
   const cns = $('input').eq(5).val().trim();
 
   $.get(`${baseURL}/get/${cns}`, response => {
@@ -84,17 +83,7 @@ javascript:(() => {
     /* Check questionary radios */
     default_radio_schema.forEach(index => $('input[type="radio"]').eq(index).click());
 
-    /* Focus to city input, and call type action */
-    setTimeout(() => {
-
-      const city = response.municipio.split(' - ')[0];
-
-      $('input')[33].focus();
-
-      $.get(`${baseURL}/type/${ city }`, response => {
-        console.log(response);
-      });
-    }, writeDelay);
-    
+    /* Focus to city input */
+    $('input')[33].focus();
   });
 })()

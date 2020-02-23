@@ -39,5 +39,6 @@ server.get('/get/:id', async (req, res) => {
 });
 
 server.listen(5432, () => {
-  console.log(`[PRONTO] Servidor rodando!`);
+  console.log(`[PRONTO] Servidor local rodando!`);
+  console.log(`[PRONTO] Servidor principal rodando em: ${serverIP}`);
 });

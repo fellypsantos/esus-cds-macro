@@ -1,4 +1,6 @@
 const path = require('path');
+const nodeExternals = require('webpack-node-externals');
+const package = require('./package.json');
 
 module.exports = {
   mode: 'production',
@@ -7,5 +9,10 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'macro.bundle.js'
-  }
+  },
+  externals: [
+    nodeExternals({
+      whitelist: Object.keys(package.dependencies)
+    })
+  ]
 };

@@ -38,6 +38,14 @@ server.get('/get/:id', async (req, res) => {
 
 });
 
+server.get('/search/:name/:birthday?', async (req, res) => {
+  const { name, birthday } = req.params;
+
+  console.log('Buscar por nome: ', name, birthday);
+  
+  // fazer requisição pro servidor que conecta no sisregiii localhost:5433
+});
+
 server.listen(5432, () => {
   console.log(`[PRONTO] Servidor local rodando!`);
   console.log(`[PRONTO] Servidor principal rodando em: ${serverIP}`);

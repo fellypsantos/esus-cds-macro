@@ -41,6 +41,7 @@ let Snackbar = {
 };
 
 const targetPage = /cds\/user\/cadastroIndividual\/detail?/;
+const baseURL = 'http://localhost:5432';
 
 const text_fields = {
   nome: 9,
@@ -109,7 +110,7 @@ const fillUserInformation = response => {
   $('input')[33].focus();
 }
 
-const handleClickSearch = async cnsField => {
+const handleSearchCNS = async cnsField => {
   const cns = cnsField.val();
 
   if (cns.length == 0) return;
@@ -118,7 +119,7 @@ const handleClickSearch = async cnsField => {
     console.log(`Buscar por: ${cns}`);
     Snackbar.show('Pesquisando usuário...');
     const timer = setTimeout(() => Snackbar.show('Ainda procurando...'), 15000);
-    const response = await $.ajax({ url: `http://localhost:5432/get/${cns}`, timeout: 30000, success: () => clearTimeout(timer) });
+    const response = await $.ajax({ url: `${baseURL}/get/${cns}`, timeout: 30000, success: () => clearTimeout(timer) });
 
     // Error
     if (response.error) {
@@ -135,8 +136,21 @@ const handleClickSearch = async cnsField => {
     console.log('Erro na requisição: ', error);
 
     if (error.statusText == 'timeout') {
-      Ext.MessageBox.alert('Ocorreu um erro.', 'O Servidor demorou muito pra responder, tente novamente.');
+      Ext.MessageBox.alert('Ocorreu um erro.', 'O Servidor local demorou muito pra responder, tente novamente.');
     }
+  }
+}
+
+const handleSearchByName = async nameField => {
+  const name = nameField.val();
+
+  if (name.length == 0) return;
+
+  try {
+    const response = await $.ajax(`${baseURL}/search/fellypsantos/10-07-1995`);
+  }
+  catch(error){
+    console.error('ocorreu um errro: ', error.statusText);
   }
 }
 
@@ -149,16 +163,25 @@ const main = () => {
   Snackbar.init();
 
   const cns = textInputs.eq(5);
+  const name = textInputs.eq(7);
 
-  // resize full name field
+  // resize the inputs to place buttons beside
   cns.css({ width: '120px' });
+  name.css({ width: '550px' });
 
   // add button to fetch user data
   $('<button>Consultar</button>')
     .addClass(' x-form-button x-form-field ')
     .css({ position: 'absolute', top: '16px', left: '132px' })
     .insertAfter(cns)
-    .click(() => handleClickSearch(cns))
+    .click(() => handleSearchCNS(cns));
+
+  // add button to search user by name and birthday
+  $('<button>Buscar usuário por nome</button>')
+    .addClass(' x-form-button x-form-field ')
+    .css({ position: 'absolute', top: '16px', left: '565px' })
+    .insertAfter(name)
+    .click(() => handleSearchByName(name));
 }
 
 window.onhashchange = () => main();

@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         eSUS Macro de Consultas
 // @namespace    https://github.com/fellypsantos/esus-cds-macro
-// @version      1.0
+// @version      1.1
 // @description  Controla as requisições ao servidor de consultas de dados, e interações com o usuário.
-// @author       You
+// @author       Fellyp Santos
 // @match        http://**/esus/*
 // @grant        none
 // ==/UserScript==

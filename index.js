@@ -12,7 +12,7 @@ const computer = require('os').userInfo().username;
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const server = express().use(cors());
+const server = express().use(express.json()).use(cors());
 const arguments = process.argv;
 let paramServerIP = arguments.indexOf('--server');
 let serverIP = (paramServerIP > 0) ? arguments[paramServerIP + 1] : 'localhost'
@@ -38,12 +38,20 @@ server.get('/get/:id', async (req, res) => {
 
 });
 
-server.get('/search/:name/:birthday?', async (req, res) => {
-  const { name, birthday } = req.params;
+server.post('/search/', async (req, res) => {
 
-  console.log('Buscar por nome: ', name, birthday);
-  
-  // fazer requisição pro servidor que conecta no sisregiii localhost:5433
+  const { name, age, mother } = req.body;
+
+  console.log('Buscando por nome...', name);
+
+  const searchResult = await axios.post(`http://${ serverIP }:5433/search`, {
+    "name" : name.toUpperCase(),
+    "age": age,
+    "mother": mother.toUpperCase(),
+  });
+
+  console.log('Resultados encontrados: ', searchResult.data.length, '\n\n');
+  return res.send( searchResult.data );
 });
 
 server.listen(5432, () => {

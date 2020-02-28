@@ -40,18 +40,28 @@ server.get('/get/:id', async (req, res) => {
 
 server.post('/search/', async (req, res) => {
 
-  const { name, age, mother } = req.body;
+  const { name, birthday, mother } = req.body;
 
-  console.log('Buscando por nome...', name);
+  console.log('Buscando por nome: ', name.toUpperCase());
 
   const searchResult = await axios.post(`http://${ serverIP }:5433/search`, {
     "name" : name.toUpperCase(),
-    "age": age,
+    "birthday": birthday,
     "mother": mother.toUpperCase(),
   });
+  
+  const response = searchResult.data;
 
-  console.log('Resultados encontrados: ', searchResult.data.length, '\n\n');
-  return res.send( searchResult.data );
+  if (response.error)
+    console.log('Ocorreu um erro: ', response.description);
+  else{
+    console.log('Busca terminou sem erros.');
+    console.log('Usuários encontrados: ', response.length);
+  }
+
+  console.log('\n* * * * * * * * * * * * * * * * * * * * *\n');
+
+  return res.send( response );
 });
 
 server.listen(5432, () => {

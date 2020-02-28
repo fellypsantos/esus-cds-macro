@@ -79,6 +79,42 @@ const default_radio_schema = [
   117
 ];
 
+const showSearchResultWindow = response => {
+
+  let winSearchResult = null;
+  let htmlList = '';
+
+  response.map(user => {
+    htmlList += `<li>
+        <a href="#!" onclick="javascript:alert('oi');">
+          <div class="user">
+            <h5><b>${user.cns}</b></h5>
+            <p><b>Nome: </b>${user.nome}</p>
+            <p><b>Mãe: </b>${user.mae}</p>
+            <p><b>Nascido em: </b>${user.nascimento}</p>
+            <p><b>No dia: </b>${user.municipio}</p>
+          </div>
+        </a>
+      </li>`;
+  });
+
+  winSearchResult = new Ext.Window({
+    title: 'Resultado da busca',
+    modal: true,
+    width: 640,
+    height: 400,
+    layout: 'fit',
+    items: {
+      xtype: 'panel',
+      closable: true,
+      autoScroll: true,
+      html: `<ul class="searchResult">${ htmlList }</ul>`
+    }
+  });
+
+  winSearchResult.show();
+}
+
 const fillUserInformation = response => {
 
   /* Fill text fields */
@@ -124,6 +160,7 @@ const handleSearchCNS = async cnsField => {
     // Error
     if (response.error) {
       Ext.MessageBox.alert('Ocorreu um erro', `${response.description}`);
+      console.error('Error details: ', response);
       return;
     }
 
@@ -135,23 +172,53 @@ const handleSearchCNS = async cnsField => {
   catch (error) {
     console.log('Erro na requisição: ', error);
 
+    if (error.statusText == 'error') {
+      return Ext.MessageBox.alert('Ocorreu um erro.', 'Parece que o servidor local não foi iniciado.');
+    }
+
     if (error.statusText == 'timeout') {
-      Ext.MessageBox.alert('Ocorreu um erro.', 'O Servidor local demorou muito pra responder, tente novamente.');
+      return Ext.MessageBox.alert('Ocorreu um erro.', 'O Servidor local demorou muito pra responder, tente novamente.');
     }
   }
 }
 
-const handleSearchByName = async nameField => {
+const handleSearchByName = async (nameField, birthdayField, motherField) => {
   const name = nameField.val();
+  const birthday = birthdayField.val();
+  const mother = motherField.val();
 
   if (name.length == 0) return;
+  Snackbar.show('Procurando usuário por nome...');
 
-  try {
-    const response = await $.ajax(`${baseURL}/search/fellypsantos/10-07-1995`);
+  try{
+    const response = await $.ajax({
+      type: 'POST',
+      url: `${baseURL}/search`,
+      timeout: 30000,
+      contentType: 'application/json',
+      data: JSON.stringify({ name, birthday, mother })
+    });
+
+    if (response.error) {
+      Ext.MessageBox.alert('Ocorreu um erro', `${response.description}`);
+      console.error('Error details: ', response);
+      return;
+    }
+
+    console.log('Search by name: ', response);
+    Snackbar.show('A busca terminou!');
+    showSearchResultWindow(response);
   }
   catch(error){
     console.error('ocorreu um errro: ', error.statusText);
   }
+}
+
+const initSearchTemplate = () => {
+  let style = document.createElement('style');
+  style.type = 'text/css';
+  style.innerHTML = 'ul.searchResult{list-style:none}.searchResult>li>a{display:block;padding:10px;border-bottom:1px solid #ccc;text-decoration:none!important;color:#333}.searchResult li a:hover{background-color:#bbb}.searchResult.user>:first-child{font-size:20px;font-weight:700}';
+  document.getElementsByTagName('head')[0].appendChild(style);
 }
 
 const main = () => {
@@ -161,9 +228,12 @@ const main = () => {
   Ext = window.Ext;
   textInputs = $('input[type=text]');
   Snackbar.init();
+  initSearchTemplate();
 
   const cns = textInputs.eq(5);
   const name = textInputs.eq(7);
+  const birthday = textInputs.eq(10);
+  const mother = textInputs.eq(13);
 
   // resize the inputs to place buttons beside
   cns.css({ width: '120px' });
@@ -181,7 +251,7 @@ const main = () => {
     .addClass(' x-form-button x-form-field ')
     .css({ position: 'absolute', top: '16px', left: '565px' })
     .insertAfter(name)
-    .click(() => handleSearchByName(name));
+    .click(() => handleSearchByName(name, birthday, mother));
 }
 
 window.onhashchange = () => main();

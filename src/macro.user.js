@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         eSUS Macro de Consultas
 // @namespace    https://github.com/fellypsantos/esus-cds-macro
-// @version      1.2
+// @version      1.3
 // @description  Controla as requisições ao servidor de consultas de dados, e interações com o usuário.
 // @author       Fellyp Santos
 // @match        http://**/esus/*
@@ -42,6 +42,11 @@ let Snackbar = {
 
 const targetPage = /cds\/user\/cadastroIndividual\/detail?/;
 const baseURL = 'http://localhost:5432';
+
+const Text = {
+  btnConsultarCNS: 'Consultar',
+  btnBuscarPorNome: 'Procurar por Nome'
+}
 
 const text_fields = {
   nome: 9,
@@ -96,8 +101,8 @@ const showSearchResultWindow = response => {
             <h5><b>${user.cns}</b></h5>
             <p><b>Nome: </b>${user.nome}</p>
             <p><b>Mãe: </b>${user.mae}</p>
-            <p><b>Nascido em: </b>${user.nascimento}</p>
-            <p><b>No dia: </b>${user.municipio}</p>
+            <p><b>Nascido em: </b>${user.municipio}</p>
+            <p><b>No dia: </b>${user.nascimento}</p>
           </div>
         </a>
       </li>`;
@@ -106,7 +111,7 @@ const showSearchResultWindow = response => {
   winSearchResult = new Ext.Window({
     title: 'Resultado da busca',
     modal: true,
-    width: 640,
+    width: 450,
     height: 400,
     layout: 'fit',
     items: {
@@ -154,11 +159,15 @@ const fillUserInformation = response => {
 const handleSearchCNS = async cns => {
   if (cns.length == 0) return;
 
+  console.log(`Buscar por: ${cns}`);
+  Snackbar.show('Pesquisando usuário...');
+  $('#btnConsultarCNS').attr('disabled', '').html('Aguarde..');
+
   try {
-    console.log(`Buscar por: ${cns}`);
-    Snackbar.show('Pesquisando usuário...');
     const timer = setTimeout(() => Snackbar.show('Ainda procurando...'), 15000);
     const response = await $.ajax({ url: `${baseURL}/get/${cns}`, timeout: 30000, success: () => clearTimeout(timer) });
+
+    $('#btnConsultarCNS').removeAttr('disabled').html(Text.btnConsultarCNS);
 
     // Error
     if (response.error) {
@@ -192,7 +201,7 @@ const handleSearchByName = async (nameField, birthdayField, motherField) => {
 
   if (name.length == 0) return;
   Snackbar.show('Procurando usuário por nome...');
-  
+  $('#btnBuscarPorNome').attr('disabled', 'disabled').html('Buscando, aguarde...');
 
   try{
     const response = await $.ajax({
@@ -202,6 +211,8 @@ const handleSearchByName = async (nameField, birthdayField, motherField) => {
       contentType: 'application/json',
       data: JSON.stringify({ name, birthday, mother })
     });
+
+    $('#btnBuscarPorNome').removeAttr('disabled').html(Text.btnBuscarPorNome);
 
     if (response.error) {
       Ext.MessageBox.alert('Ocorreu um erro', `${response.description}`);
@@ -246,14 +257,14 @@ const main = () => {
   name.css({ width: '550px' });
 
   // add button to fetch user data
-  $('<button>Consultar</button>')
+  $(`<button id="btnConsultarCNS">${Text.btnConsultarCNS}</button>`)
     .addClass(' x-form-button x-form-field ')
     .css({ position: 'absolute', top: '16px', left: '132px' })
     .insertAfter(cns)
     .click(() => handleSearchCNS(cns.val()));
 
   // add button to search user by name and birthday
-  $('<button>Buscar usuário por nome</button>')
+  $(`<button id="btnBuscarPorNome">${ Text.btnBuscarPorNome }</button>`)
     .addClass(' x-form-button x-form-field ')
     .css({ position: 'absolute', top: '16px', left: '565px' })
     .insertAfter(name)

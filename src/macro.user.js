@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         eSUS Macro de Consultas
 // @namespace    https://github.com/fellypsantos/esus-cds-macro
-// @version      1.4
+// @version      1.5
 // @description  Controla as requisições ao servidor de consultas de dados, e interações com o usuário.
 // @author       Fellyp Santos
 // @match        http://**/esus/*
@@ -11,6 +11,7 @@
 let $;
 let Ext;
 let textInputs;
+let winSearchResult;
 
 let Snackbar = {
   created: false,
@@ -45,7 +46,7 @@ const baseURL = 'http://localhost:5432';
 
 const Text = {
   btnConsultarCNS: 'Consultar',
-  btnBuscarPorNome: 'Procurar por Nome'
+  btnConsultarPorNome: 'Procurar por Nome'
 }
 
 const text_fields = {
@@ -84,9 +85,15 @@ const default_radio_schema = [
   117
 ];
 
+const resetUIButtons = () => {
+  $('#btnConsultarCNS').removeAttr('disabled').html(Text.btnConsultarCNS);
+  $('#btnConsultarPorNome').removeAttr('disabled').html(Text.btnConsultarPorNome);
+}
+
+const formatCNS = cns => cns.replace(/^(\d{3})(\d{4})(\d{4})(\d{4})/, '$1 $2 $3 $4');
+
 const showSearchResultWindow = response => {
 
-  let winSearchResult = null;
   let htmlList = '';
 
   if (response.length == 0) {
@@ -96,19 +103,20 @@ const showSearchResultWindow = response => {
 
   response.map(user => {
     htmlList += `<li>
-        <a href="javascript:void(0)">
+        <a href="javascript:void(0)" data-cns="${user.cns}">
           <div class="user">
-            <h5><b>${user.cns}</b></h5>
+            <h5><b>${ formatCNS(user.cns) }</b></h5>
             <p><b>Nome: </b>${user.nome}</p>
-            <p><b>Mãe: </b>${user.mae}</p>
-            <p><b>Nascido em: </b>${user.municipio}</p>
-            <p><b>No dia: </b>${user.nascimento}</p>
+            <p><b>Mãe: </b>${user.mae || 'SEM INFORMAÇÃO'}</p>
+            <p><b>Nascido em: </b>${user.municipio || 'SEM INFORMAÇÃO'}</p>
+            <p><b>No dia: </b>${user.nascimento || 'SEM INFORMAÇÃO'}</p>
           </div>
         </a>
       </li>`;
   });
 
   winSearchResult = new Ext.Window({
+    id: 'search-result',
     title: 'Resultado da busca',
     modal: true,
     width: 450,
@@ -167,7 +175,7 @@ const handleSearchCNS = async cns => {
     const timer = setTimeout(() => Snackbar.show('Ainda procurando...'), 15000);
     const response = await $.ajax({ url: `${baseURL}/get/${cns}`, timeout: 30000, success: () => clearTimeout(timer) });
 
-    $('#btnConsultarCNS').removeAttr('disabled').html(Text.btnConsultarCNS);
+    resetUIButtons();
 
     // Error
     if (response.error) {
@@ -201,7 +209,7 @@ const handleSearchByName = async (nameField, birthdayField, motherField) => {
 
   if (name.length == 0) return;
   Snackbar.show('Procurando usuário por nome...');
-  $('#btnBuscarPorNome').attr('disabled', 'disabled').html('Buscando, aguarde...');
+  $('#btnConsultarPorNome').attr('disabled', 'disabled').html('Buscando, aguarde...');
 
   try{
     const response = await $.ajax({
@@ -212,10 +220,8 @@ const handleSearchByName = async (nameField, birthdayField, motherField) => {
       data: JSON.stringify({ name, birthday, mother })
     });
 
-    $('#btnBuscarPorNome').removeAttr('disabled').html(Text.btnBuscarPorNome);
-
     if (response.error) {
-      Ext.MessageBox.alert('Ocorreu um erro', `${response.description}`);
+      Ext.MessageBox.alert('Ocorreu um erro', 'Problemas na consulta aos dados.');
       console.error('Error details: ', response);
       return;
     }
@@ -225,15 +231,33 @@ const handleSearchByName = async (nameField, birthdayField, motherField) => {
     showSearchResultWindow(response);
   }
   catch(error){
-    console.error('ocorreu um errro: ', error.statusText);
+    console.warn('ocorreu um errro: ', error.statusText);
+    Ext.MessageBox.alert('Ocorreu um erro: ', `${error.statusText}`);
+  }
+  finally {
+    console.log('Reativar botao');
+    resetUIButtons();
   }
 }
 
 const initSearchTemplate = () => {
   let style = document.createElement('style');
   style.type = 'text/css';
-  style.innerHTML = 'ul.searchResult{list-style:none}.searchResult>li>a{display:block;padding:10px;border-bottom:1px solid #ccc;text-decoration:none!important;color:#333}.searchResult li a:hover{background-color:#bbb}.searchResult.user>:first-child{font-size:20px;font-weight:700}';
+  style.innerHTML = 'ul.searchResult{list-style:none}.searchResult>li>a{display:block;padding:10px;border-bottom:1px solid #ccc;text-decoration:none!important;color:#333}.searchResult li a:hover{background-color:#e0edff;}.searchResult.user>:first-child{font-size:20px;font-weight:700}';
   document.getElementsByTagName('head')[0].appendChild(style);
+}
+
+const handleSelectSearch = element => {
+    const cns = $(element).data('cns').toString();
+
+    // Fill the CNS input
+    $('input[type=text]').eq(5).val(cns);
+
+    // Click to start search
+    $('button').eq(0).click();
+
+    // Close the search result window
+    winSearchResult.close();
 }
 
 const main = () => {
@@ -245,12 +269,12 @@ const main = () => {
   Snackbar.init();
   initSearchTemplate();
 
-  $(document).on('click', '.searchResult a', () => console.log(this))
-
   const cns = textInputs.eq(5);
   const name = textInputs.eq(7);
   const birthday = textInputs.eq(10);
   const mother = textInputs.eq(13);
+
+  $(document).on('click', '.searchResult a', event => handleSelectSearch(event.currentTarget) );
 
   // resize the inputs to place buttons beside
   cns.css({ width: '120px' });
@@ -264,7 +288,7 @@ const main = () => {
     .click(() => handleSearchCNS(cns.val()));
 
   // add button to search user by name and birthday
-  $(`<button id="btnBuscarPorNome">${ Text.btnBuscarPorNome }</button>`)
+  $(`<button id="btnConsultarPorNome">${ Text.btnConsultarPorNome }</button>`)
     .addClass(' x-form-button x-form-field ')
     .css({ position: 'absolute', top: '16px', left: '565px' })
     .insertAfter(name)

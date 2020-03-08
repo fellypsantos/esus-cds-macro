@@ -44,24 +44,29 @@ server.post('/search/', async (req, res) => {
 
   console.log('Buscando por nome: ', name.toUpperCase());
 
-  const searchResult = await axios.post(`http://${ serverIP }:5433/search`, {
-    "name" : name.toUpperCase(),
-    "birthday": birthday,
-    "mother": mother.toUpperCase(),
-  });
-  
-  const response = searchResult.data;
+  try {
+    const searchResult = await axios.post(`http://${ serverIP }:5433/search`, {
+      "name" : name.toUpperCase(),
+      "birthday": birthday,
+      "mother": mother.toUpperCase(),
+    });
+    
+    const response = searchResult.data;
 
-  if (response.error)
-    console.log('Ocorreu um erro: ', response.description);
-  else{
-    console.log('Busca terminou sem erros.');
-    console.log('Usuários encontrados: ', response.length);
+    if (response.error)
+      console.log('Ocorreu um erro: ', response.description);
+    else{
+      console.log('Busca terminou sem erros.');
+      console.log('Usuários encontrados: ', response.length);
+    }
+
+    console.log('\n* * * * * * * * * * * * * * * * * * * * *\n');
+
+    return res.send( response );
   }
-
-  console.log('\n* * * * * * * * * * * * * * * * * * * * *\n');
-
-  return res.send( response );
+  catch(error) {
+    console.log('Ocorreu um erro na busca por nome: ', error.message);
+  }
 });
 
 server.listen(5432, () => {

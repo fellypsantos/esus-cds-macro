@@ -272,3 +272,4 @@ const main = () => {
 }
 
 window.onhashchange = () => main();
+window.onload = () => setTimeout(() => main(), 2000);

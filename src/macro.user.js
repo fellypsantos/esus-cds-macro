@@ -50,6 +50,7 @@ const Text = {
 }
 
 const text_fields = {
+  cns: 5,
   nome: 9,
   nascimento: 13,
   mae: 23,

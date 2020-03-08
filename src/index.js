@@ -66,6 +66,7 @@ server.post('/search/', async (req, res) => {
   }
   catch(error) {
     console.log('Ocorreu um erro na busca por nome: ', error.message);
+    return res.send('Erro desconhecido');
   }
 });
 

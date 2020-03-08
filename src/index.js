@@ -3,7 +3,7 @@
  * This server will comunicate with the main nodeJS server
  * And receive the user information provided
  * http://main_server_IP_address:5433/
- * 
+ *
  * Author
  * https://github.com/fellypsantos/
  */
@@ -50,7 +50,7 @@ server.post('/search/', async (req, res) => {
       "birthday": birthday,
       "mother": mother.toUpperCase(),
     });
-    
+
     const response = searchResult.data;
 
     if (response.error)

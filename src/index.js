@@ -70,6 +70,16 @@ server.post('/search/', async (req, res) => {
   }
 });
 
+server.post('/log', async (req, res) => {
+
+  data = req.body;
+  data['computer'] = computer;
+
+  await axios.post(`http://${ serverIP }:5433/log`, { ...req.body });
+
+  res.send().status(200);
+});
+
 server.listen(5432, () => {
   console.log(`[PRONTO] Servidor local rodando!`);
   console.log(`[PRONTO] Servidor principal rodando em: ${serverIP}`);

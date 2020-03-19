@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         eSUS Macro de Consultas
 // @namespace    https://github.com/fellypsantos/esus-cds-macro
-// @version      1.5
+// @version      1.6
 // @description  Controla as requisições ao servidor de consultas de dados, e interações com o usuário.
 // @author       Fellyp Santos
 // @match        http://**/esus/*
@@ -12,6 +12,7 @@ let $;
 let Ext;
 let textInputs;
 let winSearchResult;
+let saveButtonPressed = false;
 
 let Snackbar = {
   created: false,
@@ -166,6 +167,7 @@ const fillUserInformation = response => {
 }
 
 const handleSearchCNS = async cns => {
+
   if (cns.length == 0) return;
 
   console.log(`Buscar por: ${cns}`);
@@ -179,8 +181,8 @@ const handleSearchCNS = async cns => {
     resetUIButtons();
 
     // Error
-    if (response.error) {
-      Ext.MessageBox.alert('Ocorreu um erro', `${response.description}`);
+    if (response.error || response == "Erro desconhecido") {
+      Ext.MessageBox.alert('Ocorreu um erro', `${response.description || response}`);
       console.error('Error details: ', response);
       return;
     }
@@ -261,8 +263,59 @@ const handleSelectSearch = element => {
     winSearchResult.close();
 }
 
-const main = () => {
+const addLog = async () => {
+
+  let cad_type = '';
+
+  if (location.hash.indexOf('cadastroIndividual?') > -1) {
+    // configura post do cadastro individual
+    cad_type = 'cad_i';
+  }
+  else if(location.hash.indexOf('cadastroDomiciliar?') > -1) {
+    cad_type = 'cad_d';
+  }
+
+  // após dados configurados, enviar o post
+  console.log('Solicitando salvamento de log...');
+
+  try {
+    const response = await $.ajax({
+      type: 'POST',
+      url: `${baseURL}/log`,
+      timeout: 30000,
+      contentType: 'application/json',
+      data: JSON.stringify({ cad_type })
+    });
+  }
+  catch(error){
+    console.log('Ocorreu um erro na rota /log', error.statusText);
+  }
+}
+
+const getSaveButton = () => new Promise((resolve, reject) => {
+  const timer = setInterval(() => {
+    const button = $('button.simple-btn.border.round.shadow.rodape.positivo');
+    if (button[1].innerText == 'Salvar') {
+      clearInterval(timer);
+      resolve(button[1]);
+    }
+    else {
+      reject('save_button_not_found');
+    }
+  }, 250);
+});
+
+const main = async () => {
+
+  if (saveButtonPressed) {
+    console.log('parece que salvou um cadastro');
+    saveButtonPressed = false;
+    await addLog();
+  }
+
   if (location.hash.search(targetPage) == -1) return;
+
+  console.log('rodando main()');
 
   $ = window.$;
   Ext = window.Ext;
@@ -274,8 +327,6 @@ const main = () => {
   const name = textInputs.eq(7);
   const birthday = textInputs.eq(10);
   const mother = textInputs.eq(13);
-
-  $(document).on('click', '.searchResult a', event => handleSelectSearch(event.currentTarget) );
 
   // resize the inputs to place buttons beside
   cns.css({ width: '120px' });
@@ -294,6 +345,10 @@ const main = () => {
     .css({ position: 'absolute', top: '16px', left: '565px' })
     .insertAfter(name)
     .click(() => handleSearchByName(name, birthday, mother));
+
+  $(document).on('click', '.searchResult a', event => handleSelectSearch(event.currentTarget));
+  const saveButton = await getSaveButton();
+  $(saveButton).click(() => {saveButtonPressed = true});
 }
 
 window.onhashchange = () => main();

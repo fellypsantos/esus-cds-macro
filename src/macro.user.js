@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         eSUS Macro de Consultas
 // @namespace    https://github.com/fellypsantos/esus-cds-macro
-// @version      1.6
+// @version      1.7
 // @description  Controla as requisições ao servidor de consultas de dados, e interações com o usuário.
 // @author       Fellyp Santos
 // @match        http://**/esus/*
@@ -178,8 +178,6 @@ const handleSearchCNS = async cns => {
     const timer = setTimeout(() => Snackbar.show('Ainda procurando...'), 15000);
     const response = await $.ajax({ url: `${baseURL}/get/${cns}`, timeout: 30000, success: () => clearTimeout(timer) });
 
-    resetUIButtons();
-
     // Error
     if (response.error || response == "Erro desconhecido") {
       Ext.MessageBox.alert('Ocorreu um erro', `${response.description || response}`);
@@ -194,7 +192,6 @@ const handleSearchCNS = async cns => {
   }
   catch (error) {
     console.log('Erro na requisição: ', error);
-
     if (error.statusText == 'error') {
       return Ext.MessageBox.alert('Ocorreu um erro.', 'Parece que o servidor local não foi iniciado.');
     }
@@ -202,6 +199,9 @@ const handleSearchCNS = async cns => {
     if (error.statusText == 'timeout') {
       return Ext.MessageBox.alert('Ocorreu um erro.', 'O Servidor local demorou muito pra responder, tente novamente.');
     }
+  }
+  finally {
+    resetUIButtons();
   }
 }
 

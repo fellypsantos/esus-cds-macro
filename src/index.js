@@ -8,7 +8,7 @@
  * https://github.com/fellypsantos/
  */
 
-const computer = require('os').userInfo().username;
+const computer = process.env.USERNAME;
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');

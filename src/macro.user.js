@@ -251,16 +251,16 @@ const initSearchTemplate = () => {
 }
 
 const handleSelectSearch = element => {
-    const cns = $(element).data('cns').toString();
+  const cns = $(element).data('cns').toString();
 
-    // Fill the CNS input
-    $('input[type=text]').eq(5).val(cns);
+  // Fill the CNS input
+  $('input[type=text]').eq(5).val(cns);
 
-    // Click to start search
-    $('button').eq(0).click();
+  // Click to start search
+  $('button').eq(0).click();
 
-    // Close the search result window
-    winSearchResult.close();
+  // Close the search result window
+  winSearchResult.close();
 }
 
 const addLog = async () => {
@@ -346,7 +346,11 @@ const main = async () => {
     .insertAfter(name)
     .click(() => handleSearchByName(name, birthday, mother));
 
-  $(document).on('click', '.searchResult a', event => handleSelectSearch(event.currentTarget));
+  $(document).on('click', '.searchResult a', event => {
+    event.stopPropagation();
+    handleSelectSearch(event.currentTarget);
+  });
+
   const saveButton = await getSaveButton();
   $(saveButton).click(() => {saveButtonPressed = true});
 }
